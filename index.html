@@ -1,230 +1,290 @@
-import { useState } from "react";
-
-export default function Calculator() {
-  const [display, setDisplay] = useState("0");
-  const [prevValue, setPrevValue] = useState<number | null>(null);
-  const [operation, setOperation] = useState<string | null>(null);
-  const [waitingForOperand, setWaitingForOperand] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  const handleDigit = (digit: string) => {
-    if (waitingForOperand) {
-      setDisplay(digit);
-      setWaitingForOperand(false);
-    } else {
-      setDisplay(display === "0" ? digit : display + digit);
-    }
-  };
-
-  const handleDecimal = () => {
-    if (waitingForOperand) {
-      setDisplay("0.");
-      setWaitingForOperand(false);
-    } else if (!display.includes(".")) {
-      setDisplay(display + ".");
-    }
-  };
-
-  const handleOperation = (nextOperation: string) => {
-    const inputValue = parseFloat(display);
-
-    if (prevValue === null) {
-      setPrevValue(inputValue);
-    } else if (operation) {
-      const currentValue = prevValue || 0;
-      const newValue = calculate(currentValue, inputValue, operation);
-
-      setDisplay(String(newValue));
-      setPrevValue(newValue);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsive Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for enhanced look */
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.5s ease;
     }
 
-    setWaitingForOperand(true);
-    setOperation(nextOperation);
-  };
-
-  const calculate = (a: number, b: number, op: string): number => {
-    switch (op) {
-      case "+": return a + b;
-      case "-": return a - b;
-      case "×": return a * b;
-      case "÷": return b !== 0 ? a / b : 0;
-      default: return b;
+    .calculator {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
-  };
 
-  const handleEquals = () => {
-    if (!prevValue || !operation) return;
+    .display {
+      padding: 2rem;
+      text-align: right;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
 
-    const inputValue = parseFloat(display);
-    const newValue = calculate(prevValue, inputValue, operation);
+    .operation {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.25rem;
+    }
 
-    setDisplay(String(newValue));
-    setPrevValue(null);
-    setOperation(null);
-    setWaitingForOperand(true);
-  };
+    .button {
+      border: none;
+      border-radius: 16px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      padding: 1.2rem 0;
+      margin: 0.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-  const handleClear = () => {
-    setDisplay("0");
-    setPrevValue(null);
-    setOperation(null);
-    setWaitingForOperand(false);
-  };
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
 
-  const handleToggleSign = () => {
-    setDisplay(display.charAt(0) === "-" ? display.slice(1) : "-" + display);
-  };
+    .button:active {
+      transform: translateY(1px);
+      opacity: 0.8;
+    }
 
-  const handlePercentage = () => {
-    const value = parseFloat(display);
-    setDisplay(String(value / 100));
-  };
+    .btn-number { background: rgba(255, 255, 255, 0.2); color: #fff; }
+    .btn-operation { background: #667eea; color: #fff; }
+    .btn-equals { background: #764ba2; color: #fff; }
+    .btn-clear { background: #f87171; color: #fff; }
 
-  const Button = ({
-    onClick,
-    className,
-    children,
-    variant = "default",
-  }: {
-    onClick: () => void;
-    className?: string;
-    children: React.ReactNode;
-    variant?: "default" | "operation" | "equals" | "clear";
-  }) => {
-    const baseClasses = "flex items-center justify-center text-xl font-medium rounded-xl transition-all duration-150 active:scale-95 shadow-sm";
-    const variants = {
-      default: "bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white",
-      operation: "bg-blue-500 hover:bg-blue-600 text-white",
-      equals: "bg-green-500 hover:bg-green-600 text-white",
-      clear: "bg-red-500 hover:bg-red-600 text-white",
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      color: #fff;
+      z-index: 10;
+    }
+
+    .dark-mode {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .dark-mode .calculator {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .display {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-mode .button {
+      color: #fff;
+    }
+
+    .dark-mode .btn-number { background: rgba(255, 255, 255, 0.1); }
+    .dark-mode .btn-operation { background: #4f46e5; }
+    .dark-mode .btn-equals { background: #6d28d9; }
+    .dark-mode .btn-clear { background: #dc2626; }
+
+    .dark-mode .theme-toggle {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <div class="calculator">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div class="display">
+      <div class="operation" id="operation"></div>
+      <div id="display">0</div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-3 p-4">
+      <!-- Row 1 -->
+      <button class="button btn-clear" onclick="clearAll()">AC</button>
+      <button class="button btn-number" onclick="appendNumber('±')">±</button>
+      <button class="button btn-number" onclick="appendNumber('%')">%</button>
+      <button class="button btn-operation" onclick="setOperation('÷')">÷</button>
+
+      <!-- Row 2 -->
+      <button class="button btn-number" onclick="appendNumber('7')">7</button>
+      <button class="button btn-number" onclick="appendNumber('8')">8</button>
+      <button class="button btn-number" onclick="appendNumber('9')">9</button>
+      <button class="button btn-operation" onclick="setOperation('×')">×</button>
+
+      <!-- Row 3 -->
+      <button class="button btn-number" onclick="appendNumber('4')">4</button>
+      <button class="button btn-number" onclick="appendNumber('5')">5</button>
+      <button class="button btn-number" onclick="appendNumber('6')">6</button>
+      <button class="button btn-operation" onclick="setOperation('-')">−</button>
+
+      <!-- Row 4 -->
+      <button class="button btn-number" onclick="appendNumber('1')">1</button>
+      <button class="button btn-number" onclick="appendNumber('2')">2</button>
+      <button class="button btn-number" onclick="appendNumber('3')">3</button>
+      <button class="button btn-operation" onclick="setOperation('+')">+</button>
+
+      <!-- Row 5 -->
+      <button class="button btn-number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+      <button class="button btn-number" onclick="appendDecimal()">.</button>
+      <button class="button btn-equals" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let displayValue = '0';
+    let prevValue = null;
+    let operation = null;
+    let waitingForOperand = false;
+
+    const display = document.getElementById('display');
+    const operationEl = document.getElementById('operation');
+
+    function updateDisplay() {
+      display.textContent = displayValue;
+      operationEl.textContent = operation ? `${prevValue} ${operation}` : '';
+    }
+
+    function appendNumber(num) {
+      if (waitingForOperand) {
+        displayValue = num;
+        waitingForOperand = false;
+      } else {
+        displayValue = displayValue === '0' ? num : displayValue + num;
+      }
+      updateDisplay();
+    }
+
+    function appendDecimal() {
+      if (waitingForOperand) {
+        displayValue = '0.';
+        waitingForOperand = false;
+      } else if (!displayValue.includes('.')) {
+        displayValue += '.';
+      }
+      updateDisplay();
+    }
+
+    function setOperation(op) {
+      const inputValue = parseFloat(displayValue);
+
+      if (prevValue === null) {
+        prevValue = inputValue;
+      } else if (operation) {
+        const newValue = calculate(prevValue, inputValue, operation);
+        displayValue = String(newValue);
+        prevValue = newValue;
+      }
+
+      operation = op;
+      waitingForOperand = true;
+      updateDisplay();
+    }
+
+    function calculate(a, b, op) {
+      switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '×': return a * b;
+        case '÷': return b !== 0 ? a / b : 0;
+        default: return b;
+      }
+    }
+
+    function calculateResult() {
+      if (prevValue === null || operation === null) return;
+
+      const inputValue = parseFloat(displayValue);
+      const newValue = calculate(prevValue, inputValue, operation);
+
+      displayValue = String(newValue);
+      prevValue = null;
+      operation = null;
+      waitingForOperand = true;
+      updateDisplay();
+    }
+
+    function clearAll() {
+      displayValue = '0';
+      prevValue = null;
+      operation = null;
+      waitingForOperand = false;
+      updateDisplay();
+    }
+
+    function toggleSign() {
+      displayValue = (parseFloat(displayValue) * -1).toString();
+      updateDisplay();
+    }
+
+    function percentage() {
+      displayValue = (parseFloat(displayValue) / 100).toString();
+      updateDisplay();
+    }
+
+    // Button handlers
+    window.appendNumber = appendNumber;
+    window.appendDecimal = appendDecimal;
+    window.setOperation = setOperation;
+    window.calculate = calculateResult;
+    window.clearAll = clearAll;
+    window.toggleTheme = function () {
+      document.body.classList.toggle('dark-mode');
+      const toggle = document.querySelector('.theme-toggle');
+      toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     };
 
-    return (
-      <button
-        onClick={onClick}
-        className={`${baseClasses} ${variants[variant]} ${className}`}
-      >
-        {children}
-      </button>
-    );
-  };
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      const key = e.key;
+      if (/[0-9]/.test(key)) appendNumber(key);
+      if (key === '.') appendDecimal();
+      if (key === '+') setOperation('+');
+      if (key === '-') setOperation('-');
+      if (key === '*') setOperation('×');
+      if (key === '/') {
+        e.preventDefault();
+        setOperation('÷');
+      }
+      if (key === 'Enter' || key === '=') calculateResult();
+      if (key === 'Escape') clearAll();
+    });
 
-  return (
-    <div
-      className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 ${
-        isDarkMode ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-900"
-      }`}
-    >
-      <div className="w-full max-w-xs">
-        {/* Theme Toggle */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
-          >
-            {isDarkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
+    // Initialize
+    updateDisplay();
+  </script>
 
-        {/* Calculator */}
-        <div
-          className={`
-            rounded-3xl overflow-hidden shadow-2xl
-            bg-slate-800 dark:bg-slate-800
-            border border-slate-700
-          `}
-        >
-          {/* Display */}
-          <div className="p-6 text-right">
-            <div
-              className={`
-                text-5xl font-light tracking-wider
-                mb-2
-                overflow-x-auto whitespace-nowrap
-                ${isDarkMode ? "text-white" : "text-slate-900"}
-              `}
-            >
-              {display}
-            </div>
-            {operation && (
-              <div className="text-sm text-slate-400">
-                {prevValue} {operation}
-              </div>
-            )}
-          </div>
-
-          {/* Buttons Grid */}
-          <div className="grid grid-cols-4 gap-3 p-4">
-            {/* Row 1 */}
-            <Button onClick={handleClear} variant="clear" className="col-span-2">
-              AC
-            </Button>
-            <Button onClick={handleToggleSign} variant="default">
-              ±
-            </Button>
-            <Button onClick={() => handleOperation("÷")} variant="operation">
-              ÷
-            </Button>
-
-            {/* Row 2 */}
-            <Button onClick={() => handleDigit("7")} variant="default">
-              7
-            </Button>
-            <Button onClick={() => handleDigit("8")} variant="default">
-              8
-            </Button>
-            <Button onClick={() => handleDigit("9")} variant="default">
-              9
-            </Button>
-            <Button onClick={() => handleOperation("×")} variant="operation">
-              ×
-            </Button>
-
-            {/* Row 3 */}
-            <Button onClick={() => handleDigit("4")} variant="default">
-              4
-            </Button>
-            <Button onClick={() => handleDigit("5")} variant="default">
-              5
-            </Button>
-            <Button onClick={() => handleDigit("6")} variant="default">
-              6
-            </Button>
-            <Button onClick={() => handleOperation("-")} variant="operation">
-              −
-            </Button>
-
-            {/* Row 4 */}
-            <Button onClick={() => handleDigit("1")} variant="default">
-              1
-            </Button>
-            <Button onClick={() => handleDigit("2")} variant="default">
-              2
-            </Button>
-            <Button onClick={() => handleDigit("3")} variant="default">
-              3
-            </Button>
-            <Button onClick={() => handleOperation("+")} variant="operation">
-              +
-            </Button>
-
-            {/* Row 5 */}
-            <Button onClick={() => handleDigit("0")} variant="default" className="col-span-2">
-              0
-            </Button>
-            <Button onClick={handleDecimal} variant="default">
-              .
-            </Button>
-            <Button onClick={handleEquals} variant="equals">
-              =
-            </Button>
-          </div>
-        </div>
-
-        <p className="text-center text-xs text-slate-500 mt-6">
-          Built with Next.js & Tailwind CSS
-        </p>
-      </div>
-    </div>
-  );
-}
+</body>
+</html>
