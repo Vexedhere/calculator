@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Responsive Calculator</title>
+  <title>Modern Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Custom styles for enhanced look */
     body {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
@@ -244,27 +243,11 @@
       updateDisplay();
     }
 
-    function toggleSign() {
-      displayValue = (parseFloat(displayValue) * -1).toString();
-      updateDisplay();
-    }
-
-    function percentage() {
-      displayValue = (parseFloat(displayValue) / 100).toString();
-      updateDisplay();
-    }
-
-    // Button handlers
-    window.appendNumber = appendNumber;
-    window.appendDecimal = appendDecimal;
-    window.setOperation = setOperation;
-    window.calculate = calculateResult;
-    window.clearAll = clearAll;
-    window.toggleTheme = function () {
+    function toggleTheme() {
       document.body.classList.toggle('dark-mode');
       const toggle = document.querySelector('.theme-toggle');
       toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
-    };
+    }
 
     // Keyboard support
     document.addEventListener('keydown', (e) => {
