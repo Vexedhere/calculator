@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsive Pricing Section</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Optional: Add custom styles */
+    .card-hover:hover {
+      transform: scale(1.05);
+      transition: transform 0.3s ease;
+    }
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3b82f6;
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-slate-50 to-white py-20 px-6">
+
+  <div class="max-w-7xl mx-auto text-center">
+    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+      Simple, Transparent Pricing
+    </h2>
+    <p class="text-lg text-slate-600 mb-12 max-w-3xl mx-auto">
+      Choose the plan that fits your needs. All plans include a 14-day free trial. No credit card required.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+      <!-- Starter Plan -->
+      <div class="relative bg-white border border-slate-200 rounded-xl shadow-sm p-6 transition-all duration-300 card-hover">
+        <div class="popular-badge">Most Popular</div>
+        <h3 class="text-2xl font-bold text-slate-900 mt-6">Pro</h3>
+        <p class="text-slate-600 mt-2">Ideal for growing teams and serious creators.</p>
+        <div class="mt-6">
+          <span class="text-4xl font-extrabold text-slate-900">$29</span>
+          <span class="text-slate-500">/month</span>
+        </div>
+        <ul class="space-y-3 mt-8 text-left">
+          <li class="flex items-center text-slate-700">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            Unlimited Projects
+          </li>
+          <li class="flex items-center text-slate-700">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip
