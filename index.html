@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Modern Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     body {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -68,10 +70,25 @@
       opacity: 0.8;
     }
 
-    .btn-number { background: rgba(255, 255, 255, 0.2); color: #fff; }
-    .btn-operation { background: #667eea; color: #fff; }
-    .btn-equals { background: #764ba2; color: #fff; }
-    .btn-clear { background: #f87171; color: #fff; }
+    .btn-number {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .btn-operation {
+      background: #667eea;
+      color: #fff;
+    }
+
+    .btn-equals {
+      background: #764ba2;
+      color: #fff;
+    }
+
+    .btn-clear {
+      background: #f87171;
+      color: #fff;
+    }
 
     .theme-toggle {
       position: absolute;
@@ -109,10 +126,21 @@
       color: #fff;
     }
 
-    .dark-mode .btn-number { background: rgba(255, 255, 255, 0.1); }
-    .dark-mode .btn-operation { background: #4f46e5; }
-    .dark-mode .btn-equals { background: #6d28d9; }
-    .dark-mode .btn-clear { background: #dc2626; }
+    .dark-mode .btn-number {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .btn-operation {
+      background: #4f46e5;
+    }
+
+    .dark-mode .btn-equals {
+      background: #6d28d9;
+    }
+
+    .dark-mode .btn-clear {
+      background: #dc2626;
+    }
 
     .dark-mode .theme-toggle {
       background: rgba(0, 0, 0, 0.3);
@@ -121,44 +149,43 @@
     }
   </style>
 </head>
+
 <body class="dark-mode">
 
   <div class="calculator">
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+
     <div class="display">
       <div class="operation" id="operation"></div>
       <div id="display">0</div>
     </div>
 
     <div class="grid grid-cols-4 gap-3 p-4">
-      <!-- Row 1 -->
+
       <button class="button btn-clear" onclick="clearAll()">AC</button>
-      <button class="button btn-number" onclick="appendNumber('±')">±</button>
-      <button class="button btn-number" onclick="appendNumber('%')">%</button>
+      <button class="button btn-number" onclick="toggleSign()">±</button>
+      <button class="button btn-number" onclick="percentage()">%</button>
       <button class="button btn-operation" onclick="setOperation('÷')">÷</button>
 
-      <!-- Row 2 -->
       <button class="button btn-number" onclick="appendNumber('7')">7</button>
       <button class="button btn-number" onclick="appendNumber('8')">8</button>
       <button class="button btn-number" onclick="appendNumber('9')">9</button>
       <button class="button btn-operation" onclick="setOperation('×')">×</button>
 
-      <!-- Row 3 -->
       <button class="button btn-number" onclick="appendNumber('4')">4</button>
       <button class="button btn-number" onclick="appendNumber('5')">5</button>
       <button class="button btn-number" onclick="appendNumber('6')">6</button>
       <button class="button btn-operation" onclick="setOperation('-')">−</button>
 
-      <!-- Row 4 -->
       <button class="button btn-number" onclick="appendNumber('1')">1</button>
       <button class="button btn-number" onclick="appendNumber('2')">2</button>
       <button class="button btn-number" onclick="appendNumber('3')">3</button>
       <button class="button btn-operation" onclick="setOperation('+')">+</button>
 
-      <!-- Row 5 -->
       <button class="button btn-number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
       <button class="button btn-number" onclick="appendDecimal()">.</button>
-      <button class="button btn-equals" onclick="calculate()">=</button>
+      <button class="button btn-equals" onclick="calculateResult()">=</button>
+
     </div>
   </div>
 
@@ -173,38 +200,63 @@
 
     function updateDisplay() {
       display.textContent = displayValue;
-      operationEl.textContent = operation ? `${prevValue} ${operation}` : '';
+      operationEl.textContent = operation
+        ? `${prevValue} ${operation}`
+        : '';
     }
 
     function appendNumber(num) {
+      if (displayValue === 'Error') clearAll();
+
       if (waitingForOperand) {
         displayValue = num;
         waitingForOperand = false;
       } else {
-        displayValue = displayValue === '0' ? num : displayValue + num;
+        displayValue = displayValue === '0'
+          ? num
+          : displayValue + num;
       }
+
       updateDisplay();
     }
 
     function appendDecimal() {
+      if (displayValue === 'Error') clearAll();
+
       if (waitingForOperand) {
         displayValue = '0.';
         waitingForOperand = false;
       } else if (!displayValue.includes('.')) {
         displayValue += '.';
       }
+
       updateDisplay();
     }
 
     function setOperation(op) {
+      if (displayValue === 'Error') return;
+
       const inputValue = parseFloat(displayValue);
 
       if (prevValue === null) {
         prevValue = inputValue;
-      } else if (operation) {
-        const newValue = calculate(prevValue, inputValue, operation);
-        displayValue = String(newValue);
-        prevValue = newValue;
+      } else if (operation && !waitingForOperand) {
+        const result = performCalculation(
+          prevValue,
+          inputValue,
+          operation
+        );
+
+        if (!Number.isFinite(result)) {
+          displayValue = 'Error';
+          prevValue = null;
+          operation = null;
+          updateDisplay();
+          return;
+        }
+
+        displayValue = formatNumber(result);
+        prevValue = result;
       }
 
       operation = op;
@@ -212,13 +264,22 @@
       updateDisplay();
     }
 
-    function calculate(a, b, op) {
+    function performCalculation(a, b, op) {
       switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '×': return a * b;
-        case '÷': return b !== 0 ? a / b : 0;
-        default: return b;
+        case '+':
+          return a + b;
+
+        case '-':
+          return a - b;
+
+        case '×':
+          return a * b;
+
+        case '÷':
+          return b !== 0 ? a / b : NaN;
+
+        default:
+          return b;
       }
     }
 
@@ -226,12 +287,41 @@
       if (prevValue === null || operation === null) return;
 
       const inputValue = parseFloat(displayValue);
-      const newValue = calculate(prevValue, inputValue, operation);
 
-      displayValue = String(newValue);
+      const result = performCalculation(
+        prevValue,
+        inputValue,
+        operation
+      );
+
+      if (!Number.isFinite(result)) {
+        displayValue = 'Error';
+      } else {
+        displayValue = formatNumber(result);
+      }
+
       prevValue = null;
       operation = null;
       waitingForOperand = true;
+
+      updateDisplay();
+    }
+
+    function formatNumber(num) {
+      return String(Number(num.toPrecision(12)));
+    }
+
+    function toggleSign() {
+      if (displayValue === '0' || displayValue === 'Error') return;
+
+      displayValue = String(parseFloat(displayValue) * -1);
+      updateDisplay();
+    }
+
+    function percentage() {
+      if (displayValue === 'Error') return;
+
+      displayValue = String(parseFloat(displayValue) / 100);
       updateDisplay();
     }
 
@@ -245,27 +335,64 @@
 
     function toggleTheme() {
       document.body.classList.toggle('dark-mode');
+
       const toggle = document.querySelector('.theme-toggle');
-      toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+
+      toggle.textContent =
+        document.body.classList.contains('dark-mode')
+          ? '☀️'
+          : '🌙';
     }
 
     // Keyboard support
     document.addEventListener('keydown', (e) => {
       const key = e.key;
-      if (/[0-9]/.test(key)) appendNumber(key);
-      if (key === '.') appendDecimal();
-      if (key === '+') setOperation('+');
-      if (key === '-') setOperation('-');
-      if (key === '*') setOperation('×');
+
+      if (/[0-9]/.test(key)) {
+        appendNumber(key);
+      }
+
+      if (key === '.') {
+        appendDecimal();
+      }
+
+      if (key === '+') {
+        setOperation('+');
+      }
+
+      if (key === '-') {
+        setOperation('-');
+      }
+
+      if (key === '*') {
+        setOperation('×');
+      }
+
       if (key === '/') {
         e.preventDefault();
         setOperation('÷');
       }
-      if (key === 'Enter' || key === '=') calculateResult();
-      if (key === 'Escape') clearAll();
+
+      if (key === 'Enter' || key === '=') {
+        e.preventDefault();
+        calculateResult();
+      }
+
+      if (key === 'Escape') {
+        clearAll();
+      }
+
+      if (key === 'Backspace') {
+        if (!waitingForOperand && displayValue !== 'Error') {
+          displayValue = displayValue.length > 1
+            ? displayValue.slice(0, -1)
+            : '0';
+
+          updateDisplay();
+        }
+      }
     });
 
-    // Initialize
     updateDisplay();
   </script>
 
